@@ -127,6 +127,14 @@
   .check-row h3 { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
   .check-row p { font-size: 14px; color: var(--mid); margin-top: 3px; }
 
+  .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .guide-card { border: 2px solid var(--ink); padding: 24px 20px; text-decoration: none; color: var(--ink); transition: all .15s; display: block; }
+  .guide-card:hover { background: var(--ink); color: #fff; }
+  .guide-card .num { font-size: 13px; font-weight: 800; color: var(--accent); }
+  .guide-card h3 { font-size: 17px; font-weight: 900; margin: 6px 0; letter-spacing: -0.5px; line-height: 1.3; }
+  .guide-card p { font-size: 13px; color: var(--mid); }
+  .guide-card:hover p { color: rgba(255,255,255,.75); }
+
   .feat { border-top: 2px solid var(--ink); }
   .feat-row { display: flex; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
   .feat-num { font-size: 26px; font-weight: 900; color: var(--accent); min-width: 44px; }
@@ -359,6 +367,64 @@
           <p>갈아타기는 '새 대출'을 받는 것이라, 실행 시점의 DSR(총부채원리금상환비율) 규제가 다시 적용됩니다. 규제가 강화된 뒤라면 한도가 줄어 원하는 만큼 못 갈아탈 수 있습니다. 지역별 규제나 연 상환한도 조건도 미리 확인해야 합니다.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section id="guides">
+    <span class="section-label">Guides</span>
+    <h2>대출 갈아타기 가이드 10편</h2>
+    <p class="sub">수수료 산식부터 DSR·부대비용까지, 갈아타기 전에 알아야 할 것들을 주제별로 정리했습니다</p>
+    <div class="guide-grid">
+      <a class="guide-card" href="guide01-susuryo.html">
+        <div class="num">GUIDE 01</div>
+        <h3>중도상환수수료, 3억 대출이면 얼마나 나올까</h3>
+        <p>잔여일수 슬라이딩 산식을 숫자로 분해합니다</p>
+      </a>
+      <a class="guide-card" href="guide02-myeonje.html">
+        <div class="num">GUIDE 02</div>
+        <h3>대출 3년 면제, 기준일은 언제부터 세나</h3>
+        <p>계약일이 아니라 실행일인 이유와 D-day 확인법</p>
+      </a>
+      <a class="guide-card" href="guide03-budaebiyong.html">
+        <div class="num">GUIDE 03</div>
+        <h3>갈아타기 부대비용 총정리</h3>
+        <p>인지세 구간표·근저당·법무사비를 항목별로</p>
+      </a>
+      <a class="guide-card" href="guide04-sonikbungi.html">
+        <div class="num">GUIDE 04</div>
+        <h3>손익분기 계산법 — 몇 개월 뒤부터 이득인가</h3>
+        <p>남은 기간이 짧으면 손해인 이유를 숫자로</p>
+      </a>
+      <a class="guide-card" href="guide05-jigeum-vs-daegi.html">
+        <div class="num">GUIDE 05</div>
+        <h3>지금 갈아탈까, 3년 면제까지 기다릴까</h3>
+        <p>판단이 뒤집히는 지점을 부등식 하나로</p>
+      </a>
+      <a class="guide-card" href="guide06-daehwan-plan.html">
+        <div class="num">GUIDE 06</div>
+        <h3>원스톱 대환대출, 앱에서 갈아타는 방법</h3>
+        <p>진행 순서와 준비 서류, 소요 기간</p>
+      </a>
+      <a class="guide-card" href="guide07-dsr.html">
+        <div class="num">GUIDE 07</div>
+        <h3>DSR 때문에 갈아타기가 막히는 경우</h3>
+        <p>한도가 줄어드는 상황과 미리 확인하는 법</p>
+      </a>
+      <a class="guide-card" href="guide08-gojeong-byeondong.html">
+        <div class="num">GUIDE 08</div>
+        <h3>고정금리 vs 변동금리, 갈아탈 때 어느 쪽</h3>
+        <p>"고정인데 갈아타면 손해 아닌가요"에 대한 답</p>
+      </a>
+      <a class="guide-card" href="guide09-sinyong.html">
+        <div class="num">GUIDE 09</div>
+        <h3>신용대출 갈아타기, 주담대와 다른 점 5가지</h3>
+        <p>비용 구조·소요 시간·심사 기준의 차이</p>
+      </a>
+      <a class="guide-card" href="guide10-silsu.html">
+        <div class="num">GUIDE 10</div>
+        <h3>대출 갈아타기 흔한 실수 7가지</h3>
+        <p>계산은 맞았는데 실행에서 손해 보는 경우</p>
+      </a>
     </div>
   </section>
 
