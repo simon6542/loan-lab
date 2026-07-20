@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>대출랩 — 대출 갈아타기 손익 계산기 (출시 예정)</title>
-<meta name="description" content="갈아탈까 말까, 계산이 답합니다. 대출 실행일 하나로 구약정/신약정 중도상환수수료 자동 판정, 부대비용 합산, 몇 개월 뒤 본전인지 손익분기 시점까지. 출시 알림을 신청하세요.">
+<title>대출랩 — 대출 갈아타기 손익 계산기 | 중도상환수수료·손익분기 자동 계산</title>
+<meta name="description" content="대출 실행일 하나로 중도상환수수료를 자동 계산합니다. 부대비용까지 합산해 몇 개월 뒤 본전인지 손익분기 날짜를 알려주고, 지금 갈아타기와 3년 면제까지 기다리기 중 어느 쪽이 유리한지 비교합니다. 무료.">
+<link rel="canonical" href="https://simon6542.github.io/loan-lab/">
 <style>
   :root {
     --ink: #111111;
@@ -29,29 +30,23 @@
   .logo span { color: var(--accent); }
   .nav a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px; margin-left: 20px; }
 
-  .hero { padding: 64px 0 40px; }
+  .hero { padding: 56px 0 32px; }
   .badge {
     display: inline-block; background: var(--accent); color: #fff;
     font-size: 12px; font-weight: 900; letter-spacing: 2px;
     padding: 6px 14px; margin-bottom: 20px; text-transform: uppercase;
   }
   .hero h1 {
-    font-size: clamp(34px, 6vw, 58px);
+    font-size: clamp(32px, 5.5vw, 54px);
     font-weight: 900;
     letter-spacing: -2px;
     line-height: 1.12;
   }
   .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero p { margin-top: 18px; font-size: 17px; color: var(--mid); max-width: 620px; }
+  .hero p { margin-top: 18px; font-size: 17px; color: var(--mid); max-width: 640px; }
   .fact-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .fact { border: 2px solid var(--ink); padding: 10px 14px; font-size: 13px; font-weight: 800; }
   .fact b { color: var(--accent); }
-  .hero-cta {
-    display: inline-block; margin-top: 30px; padding: 16px 40px;
-    background: var(--ink); color: #fff; font-size: 17px; font-weight: 900;
-    text-decoration: none; letter-spacing: 0.5px; transition: background .15s;
-  }
-  .hero-cta:hover { background: var(--accent); }
 
   section { padding: 48px 0; }
   .section-label {
@@ -62,50 +57,90 @@
   h2 { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
   .sub { color: var(--mid); margin-bottom: 28px; font-size: 15px; }
 
-  .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 640px) { .quote-grid { grid-template-columns: 1fr; } }
-  .quote {
-    border: 2px solid var(--ink); padding: 22px 24px;
+  /* Calculator */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+  @media (max-width: 640px) { .calc-grid { grid-template-columns: 1fr; } }
+  .field label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; padding: 13px 14px; font-size: 16px;
+    border: 2px solid var(--ink); background: #fff; font-weight: 600;
+    font-family: inherit; color: var(--ink);
   }
-  .quote .q { font-size: 17px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.4; }
-  .quote .q b { color: var(--accent); }
-  .quote .a { margin-top: 10px; font-size: 14px; color: var(--mid); }
+  .field input:focus, .field select:focus { outline: 3px solid var(--accent); outline-offset: -1px; }
+  .hint { font-size: 12px; color: var(--mid); margin-top: 4px; }
+  .hint b { color: var(--accent); }
+  .field.full { grid-column: 1 / -1; }
+
+  .auto-note {
+    grid-column: 1 / -1; background: var(--gray); padding: 14px 16px;
+    font-size: 13px; border-left: 4px solid var(--accent); font-weight: 600;
+  }
+  .auto-note b { color: var(--accent); }
+
+  .btn {
+    display: inline-block; margin-top: 28px; padding: 16px 44px;
+    background: var(--ink); color: #fff; font-size: 17px; font-weight: 900;
+    border: none; cursor: pointer; letter-spacing: 0.5px;
+    transition: background .15s; font-family: inherit;
+  }
+  .btn:hover { background: var(--accent); }
+
+  #result { display: none; }
+  .result-hero {
+    background: var(--ink); color: #fff; padding: 36px 32px; margin-bottom: 28px;
+  }
+  .result-hero .amount { font-size: clamp(34px, 6.5vw, 54px); font-weight: 900; letter-spacing: -2px; color: var(--accent); }
+  .result-hero .amount.loss { color: #ff8f66; }
+  .result-hero .amount-label { font-size: 14px; font-weight: 700; opacity: .7; margin-bottom: 4px; }
+  .result-detail { margin-top: 16px; font-size: 14px; opacity: .9; }
+  .result-detail div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.15); }
+  .result-detail div b { font-weight: 800; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .kpi { border: 2px solid var(--ink); padding: 18px 16px; }
+  .kpi .k-label { font-size: 12px; font-weight: 800; color: var(--mid); letter-spacing: .5px; }
+  .kpi .k-value { font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-top: 4px; }
+  .kpi .k-value.accent { color: var(--accent); }
+  .kpi .k-sub { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+  .scenario-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 8px; }
+  .scenario { border: 2px solid var(--ink); padding: 24px 20px; position: relative; }
+  .scenario.best { background: var(--ink); color: #fff; }
+  .scenario .tag {
+    position: absolute; top: -12px; left: 16px; background: var(--accent);
+    color: #fff; font-size: 11px; font-weight: 800; padding: 3px 10px; letter-spacing: 1px;
+  }
+  .scenario h3 { font-size: 16px; font-weight: 900; margin-bottom: 10px; }
+  .scenario .s-amount { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+  .scenario.best .s-amount { color: var(--accent); }
+  .scenario p { font-size: 13px; margin-top: 10px; color: var(--mid); }
+  .scenario.best p { color: rgba(255,255,255,.75); }
+
+  .disclaimer {
+    margin-top: 28px; padding: 16px; background: var(--gray);
+    font-size: 12px; color: var(--mid); border-left: 4px solid var(--accent);
+  }
+
+  .check-list { border-top: 2px solid var(--ink); }
+  .check-row { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .check-row .c-mark { font-size: 18px; font-weight: 900; color: var(--accent); min-width: 26px; }
+  .check-row h3 { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
+  .check-row p { font-size: 14px; color: var(--mid); margin-top: 3px; }
 
   .feat { border-top: 2px solid var(--ink); }
   .feat-row { display: flex; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
   .feat-num { font-size: 26px; font-weight: 900; color: var(--accent); min-width: 44px; }
   .feat-body h3 { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; }
   .feat-body p { font-size: 14px; color: var(--mid); margin-top: 4px; }
-  .feat-body .only {
-    display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 900;
-    background: var(--accent); color: #fff; padding: 2px 8px; vertical-align: middle; letter-spacing: 1px;
-  }
+  .feat-body p b { color: var(--ink); }
 
-  .signup-box { background: var(--ink); color: #fff; padding: 40px 36px; }
-  .signup-box h2 { color: #fff; }
-  .signup-box .sub { color: rgba(255,255,255,.65); }
-  .signup-form { display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
-  .signup-form input[type=email] {
-    padding: 15px 16px; border: 2px solid #fff; font-size: 16px; font-family: inherit; font-weight: 600;
-  }
-  .signup-form input[type=email]:focus { outline: 3px solid var(--accent); outline-offset: -1px; }
-  .vote-title { font-size: 14px; font-weight: 800; margin-top: 10px; }
-  .vote-opt { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 14px; }
-  .vote-opt input { width: 17px; height: 17px; accent-color: var(--accent); }
-  .signup-form button {
-    margin-top: 12px; padding: 17px; background: var(--accent); color: #fff;
-    border: none; font-weight: 900; font-size: 17px; cursor: pointer; font-family: inherit;
-    letter-spacing: 0.5px;
-  }
-  .signup-form button:hover { background: #fff; color: var(--ink); }
-  .signup-note { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 8px; }
-  #thanks {
-    display: none; border: 2px solid var(--accent); padding: 20px 24px; margin-bottom: 24px;
-    font-weight: 800; font-size: 15px;
-  }
-  #thanks b { color: var(--accent); }
+  .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .quote-grid { grid-template-columns: 1fr; } }
+  .quote { border: 2px solid var(--ink); padding: 22px 24px; }
+  .quote .q { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.4; }
+  .quote .a { margin-top: 10px; font-size: 14px; color: var(--mid); }
 
-  .labs-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .labs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .labs-grid { grid-template-columns: 1fr; } }
   .lab-card {
     border: 2px solid var(--ink); padding: 20px; text-decoration: none; color: var(--ink); display: block;
@@ -117,7 +152,6 @@
 
   footer { border-top: 2px solid var(--ink); padding: 28px 0; margin-top: 48px; font-size: 13px; color: var(--mid); }
 </style>
-<link rel="canonical" href="https://simon6542.github.io/loan-lab/">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -138,90 +172,148 @@
 <header>
   <div class="wrap nav">
     <div class="logo">대출<span>랩</span></div>
-    <nav>
-      <a href="#problem">왜 필요한가</a>
-      <a href="#features">예정 기능</a>
-      <a href="#signup">출시 알림</a>
-    </nav>
+    <div>
+      <a href="#calc">계산기</a>
+      <a href="#guide">가이드</a>
+      <a href="#faq">FAQ</a>
+    </div>
   </div>
 </header>
 
 <div class="wrap">
 
   <div class="hero">
-    <span class="badge">Coming Soon</span>
+    <span class="badge">무료 계산기</span>
     <h1>갈아탈까 말까,<br><em>계산</em>이 답합니다</h1>
-    <p>커뮤니티에 "하라마라 해주세요"라고 묻기 전에 — 중도상환수수료부터 인지세·법무사비·근저당 말소비까지 합산하고, <b>몇 개월 뒤 본전인지</b>까지 30초 만에. 대출 갈아타기 손익 계산기를 준비하고 있습니다.</p>
+    <p>대출 실행일만 넣으면 중도상환수수료를 자동으로 계산합니다. 부대비용까지 합산해 <b>몇 개월 뒤 본전</b>인지, 그리고 <b>지금 갈아타는 것과 3년 면제까지 기다리는 것</b> 중 어느 쪽이 유리한지 비교해 드립니다.</p>
     <div class="fact-row">
-      <div class="fact">2025.1.13 수수료 <b>반토막</b> — 단, 구약정은 그대로</div>
-      <div class="fact">대출 3년 경과 시 수수료 <b>면제</b></div>
-      <div class="fact">2026.1 상호금융까지 <b>인하 확대</b></div>
+      <div class="fact">실행일 → 수수료 <b>자동 계산</b></div>
+      <div class="fact">손익분기 <b>날짜로</b> 확인</div>
+      <div class="fact">지금 vs 대기 <b>맞비교</b></div>
     </div>
-    <a class="hero-cta" href="#signup">출시 알림 신청 →</a>
   </div>
 
-  <section id="problem">
-    <span class="section-label">Problem</span>
-    <h2>다들 이렇게 묻고 있습니다</h2>
-    <p class="sub">커뮤니티·Q&amp;A에 올라온 실제 질문들 — 답을 주는 도구가 없어서, 사람들이 결정을 투표에 맡기고 있습니다</p>
-    <div class="quote-grid">
-      <div class="quote">
-        <div class="q">"중도상환수수료 <b>900만원이라는데… 맞나?</b>"</div>
-        <div class="a">은행이 알려준 숫자를 검증할 방법이 없어 커뮤니티에 재계산을 부탁합니다. 잔여일수 슬라이딩 산식을 아는 사람이 드뭅니다.</div>
+  <section id="calc">
+    <span class="section-label">Calculator</span>
+    <h2>대출 갈아타기 손익 계산기</h2>
+    <p class="sub">모르는 항목은 비워두거나 기본값을 그대로 두셔도 됩니다. 입력값은 어디에도 저장·전송되지 않고 브라우저 안에서만 계산됩니다.</p>
+
+    <div class="calc-grid">
+      <div class="field">
+        <label for="loanType">대출 종류</label>
+        <select id="loanType">
+          <option value="mortgage">주택담보대출</option>
+          <option value="credit">신용대출</option>
+        </select>
       </div>
-      <div class="quote">
-        <div class="q">"지금 갈아탈까요, <b>3년 면제까지 기다릴까요?</b>"</div>
-        <div class="a">수수료는 시간이 갈수록 줄고, 기다리는 동안 이자는 계속 나갑니다. 전문가 답변조차 서로 갈립니다.</div>
+      <div class="field">
+        <label for="sector">금융업권</label>
+        <select id="sector">
+          <option value="bank">은행</option>
+          <option value="mutual">상호금융·저축은행</option>
+        </select>
       </div>
-      <div class="quote">
-        <div class="q">"수수료 내고도 <b>이득인지 계산을 못 하겠어요</b>"</div>
-        <div class="a">수수료에 인지세, 근저당 설정·말소, 법무사비까지 — 갈아타기의 진짜 비용을 한 번에 합산해주는 곳이 없습니다.</div>
+
+      <div class="field">
+        <label for="startDate">대출 실행일</label>
+        <input type="date" id="startDate">
+        <div class="hint" id="startHint">실행일로 구약정/신약정과 3년 면제일을 자동 판정합니다</div>
       </div>
-      <div class="quote">
-        <div class="q">"갈아타기 <b>하라마라 해주세요</b>"</div>
-        <div class="a">조건을 통째로 올리고 투표까지 붙입니다. 판단 기준이 없으니 결정을 남에게 맡기는 겁니다.</div>
+      <div class="field">
+        <label for="balance">현재 대출 잔액 (원)</label>
+        <input type="text" id="balance" inputmode="numeric" placeholder="예: 300,000,000">
+      </div>
+
+      <div class="field">
+        <label for="curRate">현재 금리 (연 %)</label>
+        <input type="text" id="curRate" inputmode="decimal" placeholder="예: 4.5">
+      </div>
+      <div class="field">
+        <label for="newRate">갈아탈 금리 (연 %)</label>
+        <input type="text" id="newRate" inputmode="decimal" placeholder="예: 3.6">
+      </div>
+
+      <div class="field">
+        <label for="months">남은 상환 기간 (개월)</label>
+        <input type="text" id="months" inputmode="numeric" placeholder="예: 240">
+        <div class="hint">30년 만기면 360, 20년이면 240</div>
+      </div>
+      <div class="field">
+        <label for="repayType">상환 방식</label>
+        <select id="repayType">
+          <option value="amort">원리금균등상환</option>
+          <option value="bullet">만기일시상환 (이자만)</option>
+        </select>
+      </div>
+
+      <div class="auto-note" id="autoNote">
+        실행일을 입력하면 <b>약정 구분·면제일·수수료율</b>이 여기에 자동으로 표시됩니다.
+      </div>
+
+      <div class="field">
+        <label for="feeRate">중도상환수수료율 (%)</label>
+        <input type="text" id="feeRate" inputmode="decimal" placeholder="자동 입력됨">
+        <div class="hint"><b>대표 추정치</b>입니다 — 약정서의 실제 요율로 덮어쓰세요</div>
+      </div>
+      <div class="field">
+        <label for="extraCost">부대비용 (원)</label>
+        <input type="text" id="extraCost" inputmode="numeric" placeholder="자동 추정됨">
+        <div class="hint" id="extraHint">인지세·근저당 말소·법무사비 추정 합계</div>
+      </div>
+    </div>
+
+    <button class="btn" id="calcBtn">계산하기 →</button>
+
+    <div id="result">
+      <div class="result-hero">
+        <div class="amount-label" id="mainLabel">갈아타기 순이익 (남은 기간 전체)</div>
+        <div class="amount" id="mainAmount">0원</div>
+        <div class="result-detail" id="detailRows"></div>
+      </div>
+
+      <div class="kpi-grid" id="kpis"></div>
+
+      <h2>지금 갈아타기 vs 3년 면제까지 대기</h2>
+      <p class="sub">수수료는 시간이 갈수록 줄지만, 기다리는 동안 비싼 이자는 계속 나갑니다. 두 선택지의 순이익을 직접 비교합니다.</p>
+      <div class="scenario-grid" id="scenarios"></div>
+
+      <div class="disclaimer" id="disclaimer">
+        이 계산은 입력값에 기반한 <b>참고용 추정</b>입니다. 실제 중도상환수수료율, 부대비용, 적용 금리, 대출 한도는 금융기관과 약정 조건에 따라 달라집니다. 본 사이트는 금융상품을 중개·판매하지 않으며, 계산 결과는 투자·금융 자문이 아닙니다. 실행 전 반드시 해당 금융기관에서 확인하세요.
       </div>
     </div>
   </section>
 
-  <section id="features">
-    <span class="section-label">Features</span>
-    <h2>이런 계산기를 만들고 있습니다</h2>
-    <p class="sub">기존 계산기는 전부 "수수료율을 알아서 입력하라"고 합니다 — 대출랩은 실행일 하나면 됩니다</p>
-    <div class="feat">
-      <div class="feat-row">
-        <div class="feat-num">01</div>
-        <div class="feat-body">
-          <h3>실행일로 수수료율 자동 판정<span class="only">국내 유일</span></h3>
-          <p>대출 실행일을 넣으면 구약정/신약정(2025.1.13 은행권·2026.1.1 상호금융)을 자동 구분하고, 업권·상품별 공시 요율을 자동으로 채웁니다. 직접 입력도 가능.</p>
+  <section id="check">
+    <span class="section-label">Check</span>
+    <h2>갈아타기 전, 이것부터 확인하세요</h2>
+    <p class="sub">계산상 이득이어도 조건이 안 맞으면 갈아탈 수 없습니다. 실행 전 확인할 항목입니다.</p>
+    <div class="check-list">
+      <div class="check-row">
+        <div class="c-mark">01</div>
+        <div>
+          <h3>DSR 규제가 새로 적용됩니다</h3>
+          <p>갈아타기는 '새 대출'을 받는 것이라, 실행 시점의 DSR(총부채원리금상환비율) 기준이 다시 적용됩니다. 규제가 강화된 뒤라면 한도가 줄어 원하는 만큼 못 갈아탈 수 있습니다.</p>
         </div>
       </div>
-      <div class="feat-row">
-        <div class="feat-num">02</div>
-        <div class="feat-body">
-          <h3>진짜 비용 원스톱 합산</h3>
-          <p>중도상환수수료 + 인지세 + 근저당 설정·말소 + 법무사비까지. 갈아타기의 총 전환비용을 한 화면에서.</p>
+      <div class="check-row">
+        <div class="c-mark">02</div>
+        <div>
+          <h3>기존 대출보다 큰 금액은 어렵습니다</h3>
+          <p>대환은 기존 대출을 갚는 목적이라 통상 기존 잔액 범위 안에서만 가능합니다. 증액을 원한다면 별도 심사 대상입니다.</p>
         </div>
       </div>
-      <div class="feat-row">
-        <div class="feat-num">03</div>
-        <div class="feat-body">
-          <h3>"N개월 뒤 본전" — 손익분기 날짜<span class="only">국내 유일</span></h3>
-          <p>총 전환비용을 월 이자 절감액으로 나눠, 정확히 언제부터 이득인지 날짜로 알려드립니다. 잔여기간 총 순이익도 함께.</p>
+      <div class="check-row">
+        <div class="c-mark">03</div>
+        <div>
+          <h3>지역·주택 수에 따른 규제가 있습니다</h3>
+          <p>주택담보대출은 규제지역 여부, 보유 주택 수, 실거주 요건 등에 따라 LTV 한도와 취급 가능 여부가 달라집니다.</p>
         </div>
       </div>
-      <div class="feat-row">
-        <div class="feat-num">04</div>
-        <div class="feat-body">
-          <h3>지금 vs 3년 면제까지 대기 비교</h3>
-          <p>수수료의 잔존일수 감소와 대기 기간의 이자 손실을 맞비교 — 면제일 D-day와 함께 어느 쪽이 얼마나 유리한지.</p>
-        </div>
-      </div>
-      <div class="feat-row">
-        <div class="feat-num">05</div>
-        <div class="feat-body">
-          <h3>대환 가능 여부 체크</h3>
-          <p>수도권 규제(6.27 대책), 연 10% 면제 한도 등 — 계산 전에 "내가 지금 갈아탈 수 있는 조건인지"부터 확인.</p>
+      <div class="check-row">
+        <div class="c-mark">04</div>
+        <div>
+          <h3>상품별 중도상환수수료 면제 조건을 확인하세요</h3>
+          <p>대출 실행 후 3년 경과 시 면제가 일반적이지만, 연간 일정 비율까지 수수료 없이 상환할 수 있는 조건이 붙는 상품도 있습니다. 약정서 기준으로 확인해야 합니다.</p>
         </div>
       </div>
     </div>
@@ -230,7 +322,7 @@
   <section id="guide">
     <span class="section-label">Guide</span>
     <h2>대출 갈아타기, 이것만 알면 됩니다</h2>
-    <p class="sub">계산기가 나오기 전에도 판단의 뼈대는 잡을 수 있도록, 갈아타기의 핵심을 정리했습니다. 모든 내용은 참고용이며, 정확한 요율·조건은 반드시 해당 금융기관과 약정서에서 확인하세요.</p>
+    <p class="sub">계산 결과를 제대로 읽으려면 알아야 하는 개념을 정리했습니다. 모든 내용은 참고용이며, 정확한 요율·조건은 반드시 해당 금융기관과 약정서에서 확인하세요.</p>
     <div class="feat">
       <div class="feat-row">
         <div class="feat-num">A</div>
@@ -264,12 +356,15 @@
         <div class="feat-num">E</div>
         <div class="feat-body">
           <h3>갈아타기 전 확인할 규제·한도</h3>
-          <p>갈아타기는 '새 대출'을 받는 것이라, 실행 시점의 <b>DSR(총부채원리금상환비율) 규제가 다시 적용</b>됩니다. 규제가 강화된 뒤라면 한도가 줄어 원하는 만큼 못 갈아탈 수 있습니다. 지역별 규제나 연 상환한도 조건도 미리 확인해야 합니다.</p>
+          <p>갈아타기는 '새 대출'을 받는 것이라, 실행 시점의 DSR(총부채원리금상환비율) 규제가 다시 적용됩니다. 규제가 강화된 뒤라면 한도가 줄어 원하는 만큼 못 갈아탈 수 있습니다. 지역별 규제나 연 상환한도 조건도 미리 확인해야 합니다.</p>
         </div>
       </div>
     </div>
+  </section>
 
-    <h2 style="margin-top:44px">자주 묻는 질문</h2>
+  <section id="faq">
+    <span class="section-label">FAQ</span>
+    <h2>자주 묻는 질문</h2>
     <div class="quote-grid" style="margin-top:20px">
       <div class="quote">
         <div class="q">중도상환수수료는 어떻게 정해지나요?</div>
@@ -298,33 +393,10 @@
     </div>
   </section>
 
-  <section id="signup">
-    <div id="thanks">✓ 신청 완료! 계산기가 출시되면 <b>이메일로 한 번만</b> 알려드립니다.</div>
-    <div class="signup-box">
-      <h2>출시 알림 신청</h2>
-      <p class="sub">출시되면 이메일로 딱 한 번 알려드립니다. 스팸 없음, 광고 없음.</p>
-      <form class="signup-form" action="https://formsubmit.co/simon6542@gmail.com" method="POST">
-        <input type="hidden" name="_subject" value="[대출랩 사전예약] 랜딩 직접 신청">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_next" value="https://simon6542.github.io/loan-lab/?subscribed=1">
-        <input type="hidden" name="site" value="loan-lab-landing">
-        <input type="text" name="_honey" style="display:none">
-        <input type="email" name="email" required placeholder="이메일 주소">
-        <div class="vote-title">가장 필요한 기능은? (선택)</div>
-        <label class="vote-opt"><input type="radio" name="vote" value="수수료 자동판정"> 실행일로 수수료율 자동 판정</label>
-        <label class="vote-opt"><input type="radio" name="vote" value="손익분기 날짜"> "N개월 뒤 본전" 손익분기 날짜</label>
-        <label class="vote-opt"><input type="radio" name="vote" value="지금vs대기"> 지금 갈아타기 vs 3년 면제 대기 비교</label>
-        <label class="vote-opt"><input type="radio" name="vote" value="대환가능체크"> 대환 가능 여부(규제) 체크</label>
-        <button type="submit">출시 알림 받기 →</button>
-        <div class="signup-note">이메일은 출시 알림 1회 발송 후 파기됩니다.</div>
-      </form>
-    </div>
-  </section>
-
   <section id="labs">
     <span class="section-label">Labs</span>
-    <h2>먼저 나온 무료 계산기들</h2>
-    <p class="sub">대출랩을 만드는 팀의 다른 연구소 — 지금 바로 쓸 수 있습니다</p>
+    <h2>다른 무료 계산기</h2>
+    <p class="sub">같은 팀이 만든 다른 연구소 — 전부 무료, 가입 없이 바로 씁니다</p>
     <div class="labs-grid">
       <a class="lab-card" href="https://simon6542.github.io/jeolse-lab/">
         <h3>절세<span>랩</span></h3>
@@ -349,15 +421,265 @@
 
 <footer>
   <div class="wrap">
-    대출랩 © 2026 · 출시 준비 중 · 본 사이트의 모든 계산 결과는 참고용이며 법적 효력이 없습니다
+    대출랩 © 2026 · 본 사이트의 모든 계산 결과는 참고용이며 법적 효력이 없습니다 · 금융상품 중개·판매를 하지 않습니다
   </div>
 </footer>
 
 <script>
-if (new URLSearchParams(location.search).get('subscribed') === '1') {
-  document.getElementById('thanks').style.display = 'block';
-  document.getElementById('thanks').scrollIntoView({ behavior: 'smooth' });
-}
+(function () {
+  'use strict';
+
+  var FEE_BASIS_DAYS = 1095; // 3년
+
+  // 업권별 신약정 시행일
+  var NEW_TERMS_DATE = { bank: new Date(2025, 0, 13), mutual: new Date(2026, 0, 1) };
+
+  // 대표 추정 요율 (%) — 실제 요율은 약정서 확인 필요
+  var FEE_PRESET = {
+    bank:   { mortgage: { old: 1.2, neo: 0.6 }, credit: { old: 0.7, neo: 0.35 } },
+    mutual: { mortgage: { old: 1.5, neo: 0.75 }, credit: { old: 0.9, neo: 0.45 } }
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function num(v) { var n = Number(String(v == null ? '' : v).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; }
+  function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
+  function addYears(d, y) { var x = new Date(d.getTime()); x.setFullYear(x.getFullYear() + y); return x; }
+  function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+  function fmtDate(d) { return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
+  function monthsBetween(a, b) {
+    var m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+    if (b.getDate() < a.getDate()) m -= 1;
+    return m;
+  }
+
+  // 인지세 (금전소비대차 문서) — 통상 은행과 50% 분담
+  function stampTax(amount) {
+    if (amount <= 10000000) return 0;
+    if (amount <= 30000000) return 20000;
+    if (amount <= 50000000) return 40000;
+    if (amount <= 100000000) return 70000;
+    if (amount <= 1000000000) return 150000;
+    return 350000;
+  }
+
+  function pmt(principal, annualPct, months) {
+    var r = annualPct / 100 / 12;
+    if (months <= 0) return 0;
+    if (r === 0) return principal / months;
+    return principal * r / (1 - Math.pow(1 + r, -months));
+  }
+
+  // 월별 이자 배열
+  function interestSchedule(principal, annualPct, months, type) {
+    var arr = [], i;
+    if (months <= 0 || principal <= 0) return arr;
+    if (type === 'bullet') {
+      var m = principal * (annualPct / 100) / 12;
+      for (i = 0; i < months; i++) arr.push(m);
+      return arr;
+    }
+    var r = annualPct / 100 / 12, p = pmt(principal, annualPct, months), bal = principal;
+    for (i = 0; i < months; i++) {
+      var it = bal * r;
+      bal -= (p - it);
+      if (bal < 0) bal = 0;
+      arr.push(it);
+    }
+    return arr;
+  }
+
+  function balanceAfter(principal, annualPct, months, k, type) {
+    if (type === 'bullet') return principal;
+    if (k <= 0) return principal;
+    var r = annualPct / 100 / 12, p = pmt(principal, annualPct, months), bal = principal;
+    for (var i = 0; i < k && i < months; i++) {
+      var it = bal * r;
+      bal -= (p - it);
+      if (bal < 0) { bal = 0; break; }
+    }
+    return bal;
+  }
+
+  function sum(a) { var t = 0; for (var i = 0; i < a.length; i++) t += a[i]; return t; }
+
+  // 실행일 기준 약정 구분 / 면제일 / 잔존일수
+  function contractInfo(startDate, sector) {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var exemptDate = addYears(startDate, 3);
+    var remainDays = Math.max(0, daysBetween(today, exemptDate));
+    var isNew = startDate >= NEW_TERMS_DATE[sector];
+    return {
+      today: today,
+      exemptDate: exemptDate,
+      remainDays: remainDays,
+      remainMonths: Math.max(0, monthsBetween(today, exemptDate)),
+      isNew: isNew,
+      exempt: remainDays <= 0
+    };
+  }
+
+  function presetFeeRate(sector, loanType, isNew) {
+    return FEE_PRESET[sector][loanType][isNew ? 'neo' : 'old'];
+  }
+
+  function estimateExtraCost(loanType, balance) {
+    var stamp = Math.round(stampTax(balance) / 2); // 은행과 50% 분담
+    if (loanType === 'credit') return stamp;
+    return stamp + 30000 + 200000; // 근저당 말소 + 법무사비 추정
+  }
+
+  // 실행일/업권/종류 변경 시 자동 채움
+  var feeTouched = false, extraTouched = false;
+  $('feeRate').addEventListener('input', function () { feeTouched = true; });
+  $('extraCost').addEventListener('input', function () { extraTouched = true; });
+
+  function refreshAuto() {
+    var sd = $('startDate').value, sector = $('sector').value, loanType = $('loanType').value;
+    var balance = num($('balance').value);
+    var note = $('autoNote');
+
+    if (!sd) {
+      note.innerHTML = '실행일을 입력하면 <b>약정 구분·면제일·수수료율</b>이 여기에 자동으로 표시됩니다.';
+      return;
+    }
+    var start = new Date(sd + 'T00:00:00');
+    if (isNaN(start.getTime())) return;
+    var info = contractInfo(start, sector);
+    var rate = presetFeeRate(sector, loanType, info.isNew);
+
+    if (!feeTouched) $('feeRate').value = info.exempt ? '0' : String(rate);
+    if (!extraTouched && balance > 0) $('extraCost').value = estimateExtraCost(loanType, balance).toLocaleString('ko-KR');
+
+    var label = info.isNew ? '신약정' : '구약정';
+    var since = info.isNew
+      ? (sector === 'bank' ? '2025.1.13 이후 실행' : '2026.1.1 이후 실행')
+      : (sector === 'bank' ? '2025.1.13 이전 실행' : '2026.1.1 이전 실행');
+
+    if (info.exempt) {
+      note.innerHTML = '<b>' + label + '</b> (' + since + ') · 3년 경과 <b>수수료 면제 대상</b>입니다 (면제일 ' + fmtDate(info.exemptDate) + '). 수수료 0원으로 계산합니다.';
+    } else {
+      note.innerHTML = '<b>' + label + '</b> (' + since + ') · 3년 면제일 <b>' + fmtDate(info.exemptDate) + '</b> · <b>D-' + info.remainDays + '</b>일 남음 · 대표 요율 <b>' + rate + '%</b> 적용';
+    }
+  }
+
+  ['startDate', 'sector', 'loanType', 'balance'].forEach(function (id) {
+    $(id).addEventListener('change', refreshAuto);
+    $(id).addEventListener('input', refreshAuto);
+  });
+
+  function calc() {
+    var sd = $('startDate').value;
+    var balance = num($('balance').value);
+    var curRate = num($('curRate').value);
+    var newRate = num($('newRate').value);
+    var months = Math.round(num($('months').value));
+    var type = $('repayType').value;
+    var sector = $('sector').value;
+    var loanType = $('loanType').value;
+
+    if (!sd) { alert('대출 실행일을 입력해 주세요.'); return; }
+    if (balance <= 0) { alert('현재 대출 잔액을 입력해 주세요.'); return; }
+    if (months <= 0) { alert('남은 상환 기간(개월)을 입력해 주세요.'); return; }
+    if (curRate <= 0 || newRate <= 0) { alert('현재 금리와 갈아탈 금리를 입력해 주세요.'); return; }
+
+    var start = new Date(sd + 'T00:00:00');
+    var info = contractInfo(start, sector);
+
+    var feeRate = feeTouched ? num($('feeRate').value) : (info.exempt ? 0 : presetFeeRate(sector, loanType, info.isNew));
+    var extra = extraTouched ? num($('extraCost').value) : estimateExtraCost(loanType, balance);
+
+    // 중도상환수수료 = 잔액 × 요율 × 잔존일수/1095
+    var fee = info.exempt ? 0 : balance * (feeRate / 100) * (info.remainDays / FEE_BASIS_DAYS);
+    var totalCost = fee + extra;
+
+    // 시나리오 A — 지금 갈아타기
+    var oldInt = interestSchedule(balance, curRate, months, type);
+    var newInt = interestSchedule(balance, newRate, months, type);
+    var saveTotal = sum(oldInt) - sum(newInt);
+    var netNow = saveTotal - totalCost;
+
+    // 손익분기: 누적 절감이 총비용을 넘는 첫 달
+    var cum = 0, bepMonth = -1;
+    for (var i = 0; i < months; i++) {
+      cum += (oldInt[i] - newInt[i]);
+      if (cum >= totalCost) { bepMonth = i + 1; break; }
+    }
+
+    // 시나리오 B — 면제일까지 대기 후 갈아타기
+    var wait = Math.min(info.remainMonths, months);
+    var netWait, waitDesc;
+    if (info.exempt || wait <= 0) {
+      netWait = null;
+    } else if (wait >= months) {
+      netWait = -sum(oldInt) * 0; // 남은 기간 내 갈아탈 수 없음
+      netWait = null;
+      waitDesc = 'over';
+    } else {
+      var balAtWait = balanceAfter(balance, curRate, months, wait, type);
+      var restMonths = months - wait;
+      var oldRest = interestSchedule(balAtWait, curRate, restMonths, type);
+      var newRest = interestSchedule(balAtWait, newRate, restMonths, type);
+      netWait = (sum(oldRest) - sum(newRest)) - extra; // 수수료 0
+    }
+
+    // 결과 렌더
+    var mainEl = $('mainAmount'), labelEl = $('mainLabel');
+    labelEl.textContent = '지금 갈아탈 때 순이익 (남은 ' + months + '개월 전체)';
+    mainEl.textContent = (netNow >= 0 ? '+' : '') + won(netNow);
+    mainEl.className = 'amount' + (netNow < 0 ? ' loss' : '');
+
+    var rows = '';
+    rows += '<div><span>남은 기간 이자 절감액</span><b>' + won(saveTotal) + '</b></div>';
+    rows += '<div><span>중도상환수수료</span><b>' + (info.exempt ? '면제 (3년 경과)' : '－' + won(fee)) + '</b></div>';
+    rows += '<div><span>부대비용 (인지세·말소·법무사 추정)</span><b>－' + won(extra) + '</b></div>';
+    rows += '<div><span>갈아타기 총비용</span><b>－' + won(totalCost) + '</b></div>';
+    $('detailRows').innerHTML = rows;
+
+    var bepText, bepSub;
+    if (netNow < 0) {
+      bepText = '본전 못 넘김'; bepSub = '남은 기간 안에 비용 회수 불가';
+    } else if (bepMonth > 0) {
+      var bd = new Date(info.today.getTime()); bd.setMonth(bd.getMonth() + bepMonth);
+      bepText = bepMonth + '개월 뒤'; bepSub = fmtDate(bd) + '부터 이득';
+    } else {
+      bepText = '즉시'; bepSub = '비용이 없거나 매우 작음';
+    }
+
+    var monthlySave = (oldInt[0] || 0) - (newInt[0] || 0);
+    var kpis = '';
+    kpis += '<div class="kpi"><div class="k-label">손익분기</div><div class="k-value accent">' + bepText + '</div><div class="k-sub">' + bepSub + '</div></div>';
+    kpis += '<div class="kpi"><div class="k-label">첫 달 이자 절감</div><div class="k-value">' + won(monthlySave) + '</div><div class="k-sub">월 기준, 이후 점차 감소</div></div>';
+    kpis += '<div class="kpi"><div class="k-label">중도상환수수료</div><div class="k-value">' + (info.exempt ? '0원' : won(fee)) + '</div><div class="k-sub">' + (info.exempt ? '3년 경과 면제' : '요율 ' + feeRate + '% · 잔존 ' + info.remainDays + '일') + '</div></div>';
+    kpis += '<div class="kpi"><div class="k-label">3년 면제일</div><div class="k-value">' + (info.exempt ? '경과' : 'D-' + info.remainDays) + '</div><div class="k-sub">' + fmtDate(info.exemptDate) + '</div></div>';
+    $('kpis').innerHTML = kpis;
+
+    // 시나리오 카드
+    var html = '';
+    if (netWait === null) {
+      var reason = info.exempt
+        ? '이미 3년이 지나 수수료가 면제 상태입니다. 기다릴 이유가 없습니다.'
+        : '면제일이 남은 상환 기간보다 늦어, 기다리면 갈아탈 기간 자체가 남지 않습니다.';
+      html += '<div class="scenario best"><span class="tag">유일한 선택</span><h3>지금 갈아타기</h3><div class="s-amount">' + (netNow >= 0 ? '+' : '') + won(netNow) + '</div><p>' + reason + '</p></div>';
+    } else {
+      var nowBest = netNow >= netWait;
+      var diff = Math.abs(netNow - netWait);
+      html += '<div class="scenario' + (nowBest ? ' best' : '') + '">' + (nowBest ? '<span class="tag">유리</span>' : '') +
+        '<h3>지금 갈아타기</h3><div class="s-amount">' + (netNow >= 0 ? '+' : '') + won(netNow) + '</div>' +
+        '<p>수수료 ' + won(fee) + '을 지금 부담하는 대신, 남은 ' + months + '개월 내내 낮은 금리를 적용받습니다.</p></div>';
+      html += '<div class="scenario' + (!nowBest ? ' best' : '') + '">' + (!nowBest ? '<span class="tag">유리</span>' : '') +
+        '<h3>3년 면제까지 대기 (' + wait + '개월)</h3><div class="s-amount">' + (netWait >= 0 ? '+' : '') + won(netWait) + '</div>' +
+        '<p>수수료는 0원이 되지만, ' + wait + '개월 동안 비싼 금리를 그대로 부담합니다.</p></div>';
+      html += '<div class="scenario"><h3>차이</h3><div class="s-amount">' + won(diff) + '</div><p><b>' + (nowBest ? '지금 갈아타는 쪽' : '기다리는 쪽') + '</b>이 그만큼 유리합니다. 금리 조건이 바뀌면 결과도 달라집니다.</p></div>';
+    }
+    $('scenarios').innerHTML = html;
+
+    $('result').style.display = 'block';
+    $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('calcBtn').addEventListener('click', calc);
+  refreshAuto();
+})();
 </script>
 </body>
 </html>
