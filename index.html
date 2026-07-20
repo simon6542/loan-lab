@@ -174,6 +174,13 @@
   ]
 }
 </script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5GXQXQES4V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-5GXQXQES4V');
+</script>
 </head>
 <body>
 
@@ -738,6 +745,25 @@
       html += '<div class="scenario"><h3>차이</h3><div class="s-amount">' + won(diff) + '</div><p><b>' + (nowBest ? '지금 갈아타는 쪽' : '기다리는 쪽') + '</b>이 그만큼 유리합니다. 금리 조건이 바뀌면 결과도 달라집니다.</p></div>';
     }
     $('scenarios').innerHTML = html;
+
+    if (typeof gtag === 'function') {
+      gtag('event', 'calc_complete', {
+        loan_type: loanType,
+        sector: sector,
+        contract: info.exempt ? 'exempt' : (info.isNew ? 'new' : 'old'),
+        verdict: netWait === null ? 'now_only' : (netNow >= netWait ? 'now' : 'wait'),
+        profit_band: netNow < 0 ? 'loss'
+          : netNow < 1000000 ? 'under_100man'
+          : netNow < 10000000 ? '100_1000man' : 'over_1000man',
+        balance_band: balance < 50000000 ? 'under_5000man'
+          : balance < 100000000 ? '5000man_1eok'
+          : balance < 300000000 ? '1_3eok' : 'over_3eok',
+        bep_band: netNow < 0 ? 'never'
+          : bepMonth <= 0 ? 'immediate'
+          : bepMonth <= 6 ? 'under_6m'
+          : bepMonth <= 24 ? '6_24m' : 'over_24m'
+      });
+    }
 
     $('result').style.display = 'block';
     $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
